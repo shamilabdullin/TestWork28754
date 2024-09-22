@@ -1,95 +1,93 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+//Components
+import Link from 'next/link'
+import { Button } from 'react-bootstrap'
+import CityInput from './CityInput'
+import Loader from '@/components/Loader'
+import Error from '@/components/Error'
+
+// Stores, utils, libs
+import { getCoordinates, getCurrentWeatherData } from '@/api'
+import { useEffect, useState, KeyboardEvent, ChangeEvent } from 'react'
+import { CurrentWeatherResponse } from '@/types'
+
+// CSS
+import styles from "./page.module.sass"
+import CurrentWeather from './CurrentWeather'
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  const [currentWeather, setCurrentWeather] = useState<CurrentWeatherResponse | null | undefined>(null)
+  const [inputValue, setInputValue] = useState('')
+  const [city, setCity] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (city) {
+      setIsLoading(true)
+      getCoordinates(city).then(coordinates => {
+        if (typeof coordinates === 'object') {
+          getCurrentWeatherData(coordinates.lat, coordinates.lon)
+            .then(response => {
+              if (typeof response === 'object') setCurrentWeather(response)
+              else if (typeof response === 'string') setError(response)
+            })
+            .finally(() => setIsLoading(false))
+        }
+        else if (typeof coordinates === 'string') setError(coordinates)
+      })
+    }
+  }, [city])
+
+  const handleChangeInput = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+  }
+
+  const handleChangeCity = () => {
+    setCity(inputValue)
+  }
+
+  const handleChangeCityEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      setCity(inputValue)
+    }
+  }
+
+  return (
+    <div className={styles.page__main__content}>
+      <h1>Input your city to find out current weather</h1>
+      <div className={styles.page__main__content__searching}>
+        <CityInput 
+          inputValue={inputValue}
+          handleChangeInput={handleChangeInput}
+          handleChangeCity={handleChangeCity}
+          handleChangeCityEnter={handleChangeCityEnter}
+        />
+      </div>
+      {isLoading ?
+        <div className={styles.page__main__content__searching__loader}>
+          <Loader />
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        :
+        error ?
+          <div className={styles.page__main__content__searching__error}>
+            <Error error={error} onClose={() => setError('')} />
+          </div>
+          :
+          currentWeather ?
+            <CurrentWeather city={city} currentWeather={currentWeather} />
+            :
+            <></>
+      }
+      <Link href={'/favorites'}>
+        <Button
+          className={styles.page__main__content__myCities}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          My Cities
+        </Button>
+      </Link>
     </div>
-  );
+  )
 }
