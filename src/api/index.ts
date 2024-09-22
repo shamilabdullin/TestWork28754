@@ -8,7 +8,7 @@ export async function getFullWeatherData(lat: string, lon: string): Promise<Weat
     const response = await axios.get<WeatherResponse>
       (`${BASE_OPEN_WEATHER_URL}forecast?lat=${lat}&lon=${lon}&cnt=21&appid=${process.env.NEXT_PUBLIC_API_KEY}&units=metric`)
     return response.data
-  } catch (error) {
+  } catch {
     return 'Ошибка при получении данных погоды'
   }
 }
@@ -18,7 +18,7 @@ export async function getCurrentWeatherData(lat: string, lon: string): Promise<C
     const response = await axios.get<CurrentWeatherResponse>
       (`${BASE_OPEN_WEATHER_URL}weather?lat=${lat}&lon=${lon}&appid=${process.env.NEXT_PUBLIC_API_KEY}&units=metric`)
     return response.data
-  } catch (error) {
+  } catch {
     return 'Ошибка при получении данных погоды'
   }
 }
@@ -39,7 +39,7 @@ export async function getCoordinates(city: string): Promise<Coordinates | string
       return { lat, lon }
     }
 
-  } catch (error) {
+  } catch {
     return 'Ошибка при получении данных погоды'
   }
 }

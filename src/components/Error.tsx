@@ -3,7 +3,7 @@ import { Alert } from 'react-bootstrap'
 
 type ErrorProps = {
   error: string,
-  onClose: ((a: any, b: any) => void) | undefined
+  onClose: (() => void) | undefined
 }
 
 function Error(props: ErrorProps) {
